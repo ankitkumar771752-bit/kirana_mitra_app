@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'app/theme/app_theme.dart';
 import 'app/routes/app_routes.dart';
 
+import 'views/splash/splash_screen.dart';
+import 'views/onboarding/onboarding_screen.dart';
+import 'views/auth/role_selection_screen.dart';
 import 'views/auth/login_screen.dart';
-import 'views/auth/signup_screen.dart';
+import 'views/auth/register_screen.dart';
+
 import 'views/customer/home/customer_home_screen.dart';
 import 'views/customer/search/customer_search_screen.dart';
 import 'views/customer/cart/customer_cart_screen.dart';
@@ -33,6 +37,7 @@ import 'views/admin/payments/admin_payments_screen.dart';
 import 'views/admin/reports/admin_reports_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const KiranaMitraApp());
 }
 
@@ -46,10 +51,13 @@ class KiranaMitraApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      initialRoute: AppRoutes.login,
+      initialRoute: AppRoutes.splash,
       routes: {
+        AppRoutes.splash: (context) => const SplashScreen(),
+        AppRoutes.onboarding: (context) => const OnboardingScreen(),
+        AppRoutes.roleSelection: (context) => const RoleSelectionScreen(),
         AppRoutes.login: (context) => const LoginScreen(),
-        AppRoutes.splash: (context) => const SignupScreen(),
+        AppRoutes.register: (context) => const RegisterScreen(),
 
         // Customer Routes
         AppRoutes.customerHome: (context) => const CustomerHomeScreen(),

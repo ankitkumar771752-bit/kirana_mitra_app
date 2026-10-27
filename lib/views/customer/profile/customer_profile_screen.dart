@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../profile/profile_screen.dart';
 
 class CustomerProfileScreen extends StatelessWidget {
   const CustomerProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: const Center(
-        child: Text('Customer Profile'),
-      ),
-    );
+    return const ProfileScreen();
   }
 }

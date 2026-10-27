@@ -2,9 +2,19 @@ import 'package:flutter/foundation.dart';
 import '../models/product_model.dart';
 
 class CartController extends ChangeNotifier {
+  static final CartController instance = CartController._internal();
+  CartController._internal();
+  factory CartController() => instance;
+
   final Map<ProductModel, int> _items = {};
 
   Map<ProductModel, int> get items => _items;
+
+  int get totalItemsCount {
+    int count = 0;
+    _items.forEach((_, qty) => count += qty);
+    return count;
+  }
 
   double get totalPrice {
     double total = 0.0;
