@@ -6,39 +6,51 @@ class CartController extends ChangeNotifier {
   CartController._internal();
   factory CartController() => instance;
 
-  final Map<ProductModel, int> _items = {};
+  final Map<String, MapEntry<ProductModel, int>> _items = {};
 
-  Map<ProductModel, int> get items => _items;
+  Map<ProductModel, int> get items {
+    final Map<ProductModel, int> map = {};
+    _items.forEach((_, entry) {
+      map[entry.key] = entry.value;
+    });
+    return map;
+  }
 
   int get totalItemsCount {
     int count = 0;
-    _items.forEach((_, qty) => count += qty);
+    _items.forEach((_, entry) => count += entry.value);
     return count;
   }
 
   double get totalPrice {
     double total = 0.0;
-    _items.forEach((product, qty) {
-      total += product.price * qty;
+    _items.forEach((_, entry) {
+      total += entry.key.price * entry.value;
     });
     return total;
   }
 
   void addToCart(ProductModel product) {
-    if (_items.containsKey(product)) {
-      _items[product] = _items[product]! + 1;
+    final key = product.id.isNotEmpty ? product.id : product.name;
+    debugPrint('CartController: Adding product "${product.name}" (ID: ${product.id}, Key: $key)');
+    if (_items.containsKey(key)) {
+      final currentQty = _items[key]!.value;
+      _items[key] = MapEntry(product, currentQty + 1);
     } else {
-      _items[product] = 1;
+      _items[key] = MapEntry(product, 1);
     }
+    debugPrint('CartController: Total unique items in cart: ${_items.length}');
     notifyListeners();
   }
 
   void removeFromCart(ProductModel product) {
-    if (_items.containsKey(product)) {
-      if (_items[product]! > 1) {
-        _items[product] = _items[product]! - 1;
+    final key = product.id.isNotEmpty ? product.id : product.name;
+    if (_items.containsKey(key)) {
+      final currentQty = _items[key]!.value;
+      if (currentQty > 1) {
+        _items[key] = MapEntry(product, currentQty - 1);
       } else {
-        _items.remove(product);
+        _items.remove(key);
       }
       notifyListeners();
     }

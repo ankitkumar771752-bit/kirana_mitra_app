@@ -147,85 +147,90 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                           crossAxisCount: 2,
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
-                          childAspectRatio: 0.75,
+                          childAspectRatio: 0.72,
                         ),
                         itemCount: products.length,
                         itemBuilder: (context, index) {
                           final prod = products[index];
-                          return GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ProductDetailsScreen(product: prod),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 6, spreadRadius: 2)],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Product Image with Photo
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: SizedBox(
-                                      height: 100,
-                                      width: double.infinity,
-                                      child: prod.imageUrl.isNotEmpty
-                                          ? (prod.imageUrl.startsWith('http')
-                                              ? Image.network(
-                                                  prod.imageUrl,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) => Container(
-                                                    color: Colors.green.withValues(alpha: 0.1),
-                                                    child: const Icon(Icons.shopping_bag, color: Colors.green, size: 40),
-                                                  ),
-                                                )
-                                              : Image.file(
-                                                  File(prod.imageUrl),
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) => Container(
-                                                    color: Colors.green.withValues(alpha: 0.1),
-                                                    child: const Icon(Icons.shopping_bag, color: Colors.green, size: 40),
-                                                  ),
-                                                ))
-                                          : Container(
-                                              color: Colors.green.withValues(alpha: 0.1),
-                                              child: const Icon(Icons.shopping_bag, color: Colors.green, size: 40),
-                                            ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(prod.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                  const SizedBox(height: 2),
-                                  Text('₹ ${prod.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
-                                  const Spacer(),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.green,
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 6, spreadRadius: 2)],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Tappable Area for Product Details
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ProductDetailsScreen(product: prod),
                                       ),
-                                      onPressed: () {
-                                        CartController.instance.addToCart(prod);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('${prod.name} added to cart!'), backgroundColor: Colors.green),
-                                        );
-                                      },
-                                      child: const Text('Add to Cart', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                                    ),
+                                    );
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: SizedBox(
+                                          height: 90,
+                                          width: double.infinity,
+                                          child: prod.imageUrl.isNotEmpty
+                                              ? (prod.imageUrl.startsWith('http')
+                                                  ? Image.network(
+                                                      prod.imageUrl,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context, error, stackTrace) => Container(
+                                                        color: Colors.green.withValues(alpha: 0.1),
+                                                        child: const Icon(Icons.shopping_bag, color: Colors.green, size: 35),
+                                                      ),
+                                                    )
+                                                  : Image.file(
+                                                      File(prod.imageUrl),
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (context, error, stackTrace) => Container(
+                                                        color: Colors.green.withValues(alpha: 0.1),
+                                                        child: const Icon(Icons.shopping_bag, color: Colors.green, size: 35),
+                                                      ),
+                                                    ))
+                                              : Container(
+                                                  color: Colors.green.withValues(alpha: 0.1),
+                                                  child: const Icon(Icons.shopping_bag, color: Colors.green, size: 35),
+                                                ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(prod.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                      const SizedBox(height: 2),
+                                      Text('₹ ${prod.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const Spacer(),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      padding: const EdgeInsets.symmetric(vertical: 6),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: () {
+                                      CartController.instance.addToCart(prod);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('${prod.name} added to cart!'), backgroundColor: Colors.green),
+                                      );
+                                    },
+                                    child: const Text('Add to Cart', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         },

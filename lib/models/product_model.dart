@@ -21,14 +21,14 @@ class ProductModel {
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
-      id: json['id'] ?? '',
-      storeId: json['storeId'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
+      id: json['id']?.toString() ?? json['product_id']?.toString() ?? json['_id']?.toString() ?? json['productId']?.toString() ?? '',
+      storeId: json['storeId']?.toString() ?? json['store_id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
       price: (json['price'] ?? 0.0).toDouble(),
-      stock: json['stock'] ?? 0,
-      imageUrl: json['imageUrl'] ?? '',
-      category: json['category'] ?? '',
+      stock: (json['stock'] ?? json['quantity'] ?? 0).toInt(),
+      imageUrl: json['imageUrl']?.toString() ?? json['image']?.toString() ?? '',
+      category: json['category']?.toString() ?? json['category_id']?.toString() ?? '',
     );
   }
 
@@ -44,4 +44,12 @@ class ProductModel {
       'category': category,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProductModel && runtimeType == other.runtimeType && (id == other.id || (id.isNotEmpty && id == other.id));
+
+  @override
+  int get hashCode => id.isNotEmpty ? id.hashCode : name.hashCode;
 }
