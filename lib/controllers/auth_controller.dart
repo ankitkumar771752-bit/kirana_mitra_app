@@ -24,6 +24,54 @@ class AuthController extends ChangeNotifier {
   static const String _keySession = 'active_user_session';
   static const String _keyRegisteredUsers = 'registered_users';
 
+  List<String> _savedAddresses = [
+    '123, Green Park, Near City Center, Gwalior - 474011',
+    '45, Alkapuri, Lashkar, Gwalior - 474001'
+  ];
+
+  List<String> get savedAddresses => _savedAddresses;
+
+  Future<void> loadAddresses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userKey = 'saved_addresses_${_currentUser?.email ?? _currentUser?.phone ?? 'default'}';
+      final list = prefs.getStringList(userKey);
+      if (list != null && list.isNotEmpty) {
+        _savedAddresses = list;
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading addresses: $e');
+    }
+  }
+
+  Future<void> addAddress(String newAddress) async {
+    if (newAddress.trim().isEmpty) return;
+    if (!_savedAddresses.contains(newAddress.trim())) {
+      _savedAddresses.add(newAddress.trim());
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final userKey = 'saved_addresses_${_currentUser?.email ?? _currentUser?.phone ?? 'default'}';
+        await prefs.setStringList(userKey, _savedAddresses);
+      } catch (e) {
+        debugPrint('Error saving address: $e');
+      }
+      notifyListeners();
+    }
+  }
+
+  Future<void> removeAddress(String address) async {
+    _savedAddresses.remove(address);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userKey = 'saved_addresses_${_currentUser?.email ?? _currentUser?.phone ?? 'default'}';
+      await prefs.setStringList(userKey, _savedAddresses);
+    } catch (e) {
+      debugPrint('Error removing address: $e');
+    }
+    notifyListeners();
+  }
+
   static final RegExp _basicEmailRegex = RegExp(
     r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$",
   );
@@ -184,6 +232,7 @@ class AuthController extends ChangeNotifier {
         final Map<String, dynamic> userMap = jsonDecode(sessionJson);
         _currentUser = UserModel.fromJson(userMap);
       }
+      await loadAddresses();
     } catch (e) {
       debugPrint('Error initializing AuthController session: $e');
     } finally {

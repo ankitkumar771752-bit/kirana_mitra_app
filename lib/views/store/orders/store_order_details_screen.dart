@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../controllers/order_controller.dart';
 
 class StoreOrderDetailsScreen extends StatelessWidget {
   final String orderId;
@@ -21,7 +22,7 @@ class StoreOrderDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Order Details', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: const Text('Order Details & API Action', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
@@ -113,41 +114,9 @@ class StoreOrderDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Items (5)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text('Order Items', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const Divider(height: 24),
-                  _ItemRow(name: 'Aashirvaad Atta (5kg)', qty: 'x1', price: '₹ 260'),
-                  const Divider(height: 16),
-                  _ItemRow(name: 'Maggi Noodles (70g)', qty: 'x2', price: '₹ 24'),
-                  const Divider(height: 16),
-                  _ItemRow(name: 'Tata Salt (1kg)', qty: 'x1', price: '₹ 20'),
-                  const Divider(height: 16),
-                  _ItemRow(name: 'Fortune Oil (1L)', qty: 'x1', price: '₹ 175'),
-                  const Divider(height: 16),
-                  _ItemRow(name: 'Dove Soap (100g)', qty: 'x1', price: '₹ 60'),
-                  const Divider(height: 24),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Item Total', style: TextStyle(color: Colors.grey)),
-                      Text('₹ 539', style: TextStyle(fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Delivery Charges', style: TextStyle(color: Colors.grey)),
-                      Text('₹ 20', style: TextStyle(fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Discount', style: TextStyle(color: Colors.green)),
-                      Text('(-) ₹ 60', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.green)),
-                    ],
-                  ),
+                  _ItemRow(name: 'Groceries & Daily Essentials', qty: 'x1', price: amount),
                   const Divider(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -160,7 +129,7 @@ class StoreOrderDetailsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            // Accept / Reject Buttons
+            // Accept / Reject Buttons (Connected to OrderController API)
             Row(
               children: [
                 Expanded(
@@ -170,9 +139,12 @@ class StoreOrderDetailsScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order Rejected'), backgroundColor: Colors.red));
-                      Navigator.pop(context);
+                    onPressed: () async {
+                      await OrderController.instance.updateOrderStatus(orderId, 'Cancelled');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order Rejected via API'), backgroundColor: Colors.red));
+                        Navigator.pop(context);
+                      }
                     },
                     child: const Text('Reject', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
@@ -186,9 +158,12 @@ class StoreOrderDetailsScreen extends StatelessWidget {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 2,
                     ),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order Accepted! Processing started.'), backgroundColor: Colors.green));
-                      Navigator.pop(context);
+                    onPressed: () async {
+                      await OrderController.instance.updateOrderStatus(orderId, 'Processing');
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order Accepted via API!'), backgroundColor: Colors.green));
+                        Navigator.pop(context);
+                      }
                     },
                     child: const Text('Accept', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                   ),

@@ -124,7 +124,7 @@ class _StoreSalesScreenState extends State<StoreSalesScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Sales Overview (Dynamic)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Text('Sales Overview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 16),
                       SizedBox(
                         height: 175,

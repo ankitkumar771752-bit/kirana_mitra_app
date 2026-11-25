@@ -11,8 +11,8 @@ class StoreEditProfileScreen extends StatefulWidget {
 class _StoreEditProfileScreenState extends State<StoreEditProfileScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
-  final _addressController = TextEditingController(text: '123, Green Park, Gwalior - 474001');
-  final _descController = TextEditingController(text: 'Your trusted grocery store for daily needs.');
+  late final TextEditingController _addressController;
+  late final TextEditingController _descController;
 
   @override
   void initState() {
@@ -20,6 +20,8 @@ class _StoreEditProfileScreenState extends State<StoreEditProfileScreen> {
     final user = AuthController.instance.currentUser;
     _nameController = TextEditingController(text: user?.name.isNotEmpty == true ? user!.name : 'Kirana Mitra Store');
     _phoneController = TextEditingController(text: user?.phone.isNotEmpty == true ? user!.phone : '+91 98765 43210');
+    _addressController = TextEditingController(text: user?.address ?? '');
+    _descController = TextEditingController(text: user?.description ?? '');
   }
 
   @override
@@ -95,12 +97,13 @@ class _StoreEditProfileScreenState extends State<StoreEditProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Address *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black54)),
+            const Text('Address', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black54)),
             const SizedBox(height: 8),
             TextField(
               controller: _addressController,
               maxLines: 2,
               decoration: InputDecoration(
+                hintText: 'Enter store address (leave blank to hide)',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
@@ -114,6 +117,7 @@ class _StoreEditProfileScreenState extends State<StoreEditProfileScreen> {
               controller: _descController,
               maxLines: 3,
               decoration: InputDecoration(
+                hintText: 'Enter store description (leave blank to hide)',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
@@ -136,6 +140,8 @@ class _StoreEditProfileScreenState extends State<StoreEditProfileScreen> {
                     AuthController.instance.login(user.copyWith(
                       name: _nameController.text.trim(),
                       phone: _phoneController.text.trim(),
+                      address: _addressController.text.trim(),
+                      description: _descController.text.trim(),
                     ));
                   }
                   ScaffoldMessenger.of(context).showSnackBar(

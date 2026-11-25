@@ -35,7 +35,7 @@ class _StoreInventoryScreenState extends State<StoreInventoryScreen> with Single
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            title: const Text('Inventory (Dynamic API)', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+            title: const Text('Inventory', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
             bottom: TabBar(
               controller: _tabController,
               labelColor: Colors.green,

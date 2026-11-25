@@ -3,8 +3,19 @@ import 'package:flutter/material.dart';
 import '../../../controllers/cart_controller.dart';
 import '../../../app/routes/app_routes.dart';
 
-class CustomerCartScreen extends StatelessWidget {
+class CustomerCartScreen extends StatefulWidget {
   const CustomerCartScreen({super.key});
+
+  @override
+  State<CustomerCartScreen> createState() => _CustomerCartScreenState();
+}
+
+class _CustomerCartScreenState extends State<CustomerCartScreen> {
+  @override
+  void initState() {
+    super.initState();
+    CartController.instance.init();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,85 +30,100 @@ class CustomerCartScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            title: const Text('My Cart (Dynamic)', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+            title: const Text('My Cart', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87),
               onPressed: () => Navigator.pop(context),
             ),
           ),
           body: cartItems.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+              ? RefreshIndicator(
+                  color: Colors.green,
+                  onRefresh: () => CartController.instance.fetchCart(),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     children: [
-                      Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
-                      const Text('Your Cart is Empty', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-                      const SizedBox(height: 8),
-                      const Text('Add items from home to start shopping', style: TextStyle(color: Colors.grey)),
+                      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey.shade400),
+                            const SizedBox(height: 16),
+                            const Text('Your Cart is Empty', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                            const SizedBox(height: 8),
+                            const Text('Add items from home to start shopping', style: TextStyle(color: Colors.grey)),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 )
               : Column(
                   children: [
                     Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: cartItems.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final product = cartItems.keys.elementAt(index);
-                          final quantity = cartItems[product]!;
+                      child: RefreshIndicator(
+                        color: Colors.green,
+                        onRefresh: () => CartController.instance.fetchCart(),
+                        child: ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          itemCount: cartItems.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final product = cartItems.keys.elementAt(index);
+                            final quantity = cartItems[product]!;
 
-                          return Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 6, spreadRadius: 2)],
-                            ),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: SizedBox(
-                                    height: 60,
-                                    width: 60,
-                                    child: product.imageUrl.isNotEmpty
-                                        ? (product.imageUrl.startsWith('http')
-                                            ? Image.network(product.imageUrl, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.shopping_bag))
-                                            : Image.file(File(product.imageUrl), fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.shopping_bag)))
-                                        : const Icon(Icons.shopping_bag, color: Colors.green),
+                            return Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 6, spreadRadius: 2)],
+                              ),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: SizedBox(
+                                      height: 60,
+                                      width: 60,
+                                      child: product.imageUrl.isNotEmpty
+                                          ? (product.imageUrl.startsWith('http')
+                                              ? Image.network(product.imageUrl, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.shopping_bag))
+                                              : Image.file(File(product.imageUrl), fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.shopping_bag)))
+                                          : const Icon(Icons.shopping_bag, color: Colors.green),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                        const SizedBox(height: 4),
+                                        Text('₹ ${product.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
                                     children: [
-                                      Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                      const SizedBox(height: 4),
-                                      Text('₹ ${product.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
+                                      IconButton(
+                                        icon: const Icon(Icons.remove_circle_outline, color: Colors.grey),
+                                        onPressed: () => CartController.instance.removeFromCart(product),
+                                      ),
+                                      Text('$quantity', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                      IconButton(
+                                        icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+                                        onPressed: () => CartController.instance.addToCart(product),
+                                      ),
                                     ],
                                   ),
-                                ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove_circle_outline, color: Colors.grey),
-                                      onPressed: () => CartController.instance.removeFromCart(product),
-                                    ),
-                                    Text('$quantity', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                    IconButton(
-                                      icon: const Icon(Icons.add_circle_outline, color: Colors.green),
-                                      onPressed: () => CartController.instance.addToCart(product),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                     // Bottom Checkout Bar
@@ -115,7 +141,7 @@ class CustomerCartScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text('Total Amount:', style: TextStyle(fontSize: 16, color: Colors.grey)),
-                              Text('₹ ${totalPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+                              Text('₹ ${totalPrice.toStringAsFixed(2)}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
                             ],
                           ),
                           const SizedBox(height: 16),

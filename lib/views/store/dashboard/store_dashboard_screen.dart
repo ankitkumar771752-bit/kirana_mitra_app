@@ -218,7 +218,7 @@ class _DashboardHomeTabState extends State<_DashboardHomeTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Recent Dynamic Orders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text('Recent Orders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     TextButton(
                       onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const StoreOrdersScreen())),
                       child: const Text('View All', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),

@@ -3,6 +3,7 @@ import '../../app/routes/app_routes.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/order_controller.dart';
 import '../../models/user_model.dart';
+import '../customer/wishlist/wishlist_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -221,7 +222,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: 'Delivery Addresses',
                           subtitle: 'Manage your saved addresses',
                           color: Colors.purple,
-                          onTap: () {},
+                          onTap: () {
+                            _showDeliveryAddressesBottomSheet(context);
+                          },
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
                         _ProfileMenuItem(
@@ -229,7 +232,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           title: 'Wishlist',
                           subtitle: 'Your saved products',
                           color: Colors.pink,
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const WishlistScreen()));
+                          },
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
                         _ProfileMenuItem(
@@ -283,6 +288,121 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showDeliveryAddressesBottomSheet(BuildContext context) {
+    AuthController.instance.loadAddresses();
+    final TextEditingController newAddressController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => AnimatedBuilder(
+        animation: AuthController.instance,
+        builder: (context, child) {
+          final addresses = AuthController.instance.savedAddresses;
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Delivery Addresses', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Manage your saved delivery addresses. You can add new addresses below.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(height: 16),
+                  addresses.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(child: Text('No saved addresses found. Add one below!', style: TextStyle(color: Colors.grey))),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: addresses.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final addr = addresses[index];
+                            return Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.location_on, color: Colors.green),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(addr, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black87)),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                    onPressed: () {
+                                      AuthController.instance.removeAddress(addr);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                  const SizedBox(height: 20),
+                  const Text('Add New Address', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: newAddressController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      hintText: 'Enter full delivery address (e.g. House No, Street, City)',
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () async {
+                        final text = newAddressController.text.trim();
+                        final sm = ScaffoldMessenger.of(context);
+                        if (text.isNotEmpty) {
+                          await AuthController.instance.addAddress(text);
+                          newAddressController.clear();
+                          sm.showSnackBar(
+                            const SnackBar(content: Text('Address added successfully! 🎉'), backgroundColor: Colors.green),
+                          );
+                        }
+                      },
+                      child: const Text('Save Address', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

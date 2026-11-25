@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/order_model.dart';
 import '../services/api_service.dart';
+import 'auth_controller.dart';
 
 class OrderController extends ChangeNotifier {
   static final OrderController instance = OrderController._internal();
@@ -11,42 +10,11 @@ class OrderController extends ChangeNotifier {
 
   List<OrderModel> _orders = [];
   bool _isLoading = false;
-  bool _isInitialized = false;
 
   List<OrderModel> get orders => _orders;
   bool get isLoading => _isLoading;
 
-  static const String _keySavedOrders = 'saved_store_orders';
-
-  Future<void> init() async {
-    if (_isInitialized) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonString = prefs.getString(_keySavedOrders);
-      if (jsonString != null && jsonString.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(jsonString);
-        _orders = decoded.map((item) => OrderModel.fromJson(item)).toList();
-      }
-    } catch (e) {
-      debugPrint('Error loading locally persisted orders: $e');
-    } finally {
-      _isInitialized = true;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _persistOrders() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonString = jsonEncode(_orders.map((o) => o.toJson()).toList());
-      await prefs.setString(_keySavedOrders, jsonString);
-    } catch (e) {
-      debugPrint('Error persisting orders locally: $e');
-    }
-  }
-
   Future<void> fetchOrders() async {
-    await init();
     _isLoading = true;
     notifyListeners();
     try {
@@ -60,13 +28,10 @@ class OrderController extends ChangeNotifier {
         } else if (response is Map && response['orders'] is List) {
           list = response['orders'];
         }
-        if (list.isNotEmpty) {
-          _orders = list.map((item) => OrderModel.fromJson(item)).toList();
-          await _persistOrders();
-        }
+        _orders = list.map((item) => OrderModel.fromJson(item)).toList();
       }
     } catch (e) {
-      debugPrint('Error fetching orders from API (using local persisted orders): $e');
+      debugPrint('Error fetching orders from API: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -74,28 +39,41 @@ class OrderController extends ChangeNotifier {
   }
 
   Future<void> updateOrderStatus(String orderId, String newStatus) async {
-    await init();
     try {
-      await ApiService.put('/api/orders/$orderId', {'status': newStatus});
+      final userId = AuthController.instance.currentUser?.id;
+      await ApiService.put('/api/orders/$orderId', {
+        'status': newStatus,
+        'deliveryPartnerId': userId,
+        'updatedBy': userId,
+      });
+      await fetchOrders();
     } catch (e) {
       debugPrint('Error updating order status via API: $e');
     }
-    final index = _orders.indexWhere((o) => o.id == orderId);
-    if (index != -1) {
-      final old = _orders[index];
-      _orders[index] = OrderModel(
-        id: old.id,
-        customerId: old.customerId,
-        storeId: old.storeId,
-        deliveryPartnerId: old.deliveryPartnerId,
-        items: old.items,
-        totalAmount: old.totalAmount,
-        status: newStatus,
-        deliveryAddress: old.deliveryAddress,
-        createdAt: old.createdAt,
-      );
-      await _persistOrders();
-      notifyListeners();
+  }
+
+  Future<bool> createOrder({
+    required List<Map<String, dynamic>> items,
+    required double totalAmount,
+    required String deliveryAddress,
+  }) async {
+    try {
+      final userId = AuthController.instance.currentUser?.id ?? 'cust_1';
+      final data = {
+        'items': items,
+        'totalAmount': totalAmount,
+        'deliveryAddress': deliveryAddress,
+        'customerId': userId,
+        'userId': userId,
+        'storeId': 'store_1',
+        'status': 'pending',
+      };
+      await ApiService.post('/api/orders', data);
+      await fetchOrders();
+      return true;
+    } catch (e) {
+      debugPrint('Error creating order via API: $e');
+      throw Exception('Failed to create order on server: $e');
     }
   }
 }

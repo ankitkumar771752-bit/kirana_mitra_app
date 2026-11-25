@@ -47,7 +47,7 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                     Expanded(
                       child: TextField(
                         decoration: InputDecoration(
-                          hintText: 'Search dynamic products...',
+                          hintText: 'Search products...',
                           prefixIcon: const Icon(Icons.search, color: Colors.green),
                           filled: true,
                           fillColor: Colors.white,

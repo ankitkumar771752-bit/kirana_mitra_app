@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../controllers/auth_controller.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://kirana-mitra-3.onrender.com';
+  static const String baseUrl = 'https://kirana-mitra-11.onrender.com';
   static const Duration timeoutDuration = Duration(seconds: 40);
 
   // Helper to get headers with Authorization Bearer token (with fallback dev token)

@@ -52,13 +52,28 @@ class StoreProfileScreen extends StatelessWidget {
                               Text(storeName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
                               const SizedBox(height: 2),
                               const Text('Store Owner', style: TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w500)),
+                              if (user?.address != null && user!.address.trim().isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(user.address, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                              ],
+                              if (user?.description != null && user!.description.trim().isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(user.description, style: const TextStyle(fontSize: 11, color: Colors.black54, fontStyle: FontStyle.italic)),
+                              ],
                               const SizedBox(height: 6),
                               Row(
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                                    child: Text('ID: ${user?.id ?? 'KM1234'}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green)),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+                                      child: Text(
+                                        'ID: ${user?.id ?? 'KM1234'}',
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
                                   ),
                                   const SizedBox(width: 8),
                                   const Text('● Online', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),

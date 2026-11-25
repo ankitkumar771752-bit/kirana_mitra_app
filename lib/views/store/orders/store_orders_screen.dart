@@ -35,7 +35,7 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> with SingleTicker
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            title: const Text('Store Orders (Dynamic API)', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+            title: const Text('Store Orders', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
             bottom: TabBar(
               controller: _tabController,
               labelColor: Colors.green,

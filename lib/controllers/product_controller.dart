@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,70 +7,105 @@ import '../services/api_service.dart';
 
 class ProductController extends ChangeNotifier {
   static final ProductController instance = ProductController._internal();
-  ProductController._internal();
+  ProductController._internal() {
+    _startPolling();
+  }
   factory ProductController() => instance;
 
   List<ProductModel> _products = [];
   bool _isLoading = false;
-  bool _isInitialized = false;
+  Timer? _pollingTimer;
 
   List<ProductModel> get products => _products;
   bool get isLoading => _isLoading;
 
-  static const String _keySavedProducts = 'saved_store_products';
-
-  Future<void> init() async {
-    if (_isInitialized) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonString = prefs.getString(_keySavedProducts);
-      if (jsonString != null && jsonString.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(jsonString);
-        _products = decoded.map((item) => ProductModel.fromJson(item)).toList();
-      }
-    } catch (e) {
-      debugPrint('Error loading locally persisted products: $e');
-    } finally {
-      _isInitialized = true;
-      notifyListeners();
-    }
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      fetchProducts(silent: true);
+    });
   }
 
-  Future<void> _persistProducts() async {
+  static const String _globalKey = 'kiranamitra_global_catalog_products';
+
+  Future<void> _persistLocal() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = jsonEncode(_products.map((p) => p.toJson()).toList());
-      await prefs.setString(_keySavedProducts, jsonString);
+      await prefs.setString(_globalKey, jsonString);
     } catch (e) {
-      debugPrint('Error persisting products locally: $e');
+      debugPrint('Error persisting global products locally: $e');
     }
   }
 
-  Future<void> fetchProducts() async {
-    await init();
-    _isLoading = true;
-    notifyListeners();
+  Future<void> _loadLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonString = prefs.getString(_globalKey);
+      if (jsonString != null && jsonString.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(jsonString);
+        _products = decoded.map((item) => ProductModel.fromJson(item)).toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading global local products: $e');
+    }
+  }
+
+  Future<void> fetchProducts({bool silent = false}) async {
+    if (!silent) {
+      await _loadLocal();
+      _isLoading = true;
+      notifyListeners();
+    }
     try {
       final response = await ApiService.get('/api/products');
       if (response != null) {
         List<dynamic> list = [];
         if (response is List) {
           list = response;
-        } else if (response is Map && response['data'] is List) {
-          list = response['data'];
-        } else if (response is Map && response['products'] is List) {
-          list = response['products'];
+        } else if (response is Map) {
+          for (var key in ['data', 'products', 'result', 'items', 'content', 'payload', 'list']) {
+            if (response[key] is List) {
+              list = response[key];
+              break;
+            }
+          }
+          if (list.isEmpty) {
+            for (var val in response.values) {
+              if (val is List) {
+                list = val;
+                break;
+              }
+            }
+          }
         }
-        if (list.isNotEmpty) {
-          _products = list.map((item) => ProductModel.fromJson(item)).toList();
-          await _persistProducts();
+        
+        final serverProducts = list.map((item) => ProductModel.fromJson(item is Map ? Map<String, dynamic>.from(item) : {})).toList();
+        
+        // Merge server products with local products
+        final Map<String, ProductModel> combined = {};
+        for (var p in _products) {
+          final key = p.name.toLowerCase().trim();
+          combined[key] = p;
         }
+        for (var p in serverProducts) {
+          if (p.name.isNotEmpty) {
+            final key = p.name.toLowerCase().trim();
+            combined[key] = p;
+          }
+        }
+        _products = combined.values.toList();
+        await _persistLocal();
+        notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error fetching products from API (using local persisted data): $e');
+      debugPrint('Error fetching products from API: $e');
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (!silent) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -81,57 +117,47 @@ class ProductController extends ChangeNotifier {
     required String description,
     String? imageUrl,
   }) async {
-    await init();
-    try {
-      final data = {
-        'store_id': null,
-        'category_id': null,
-        'name': name,
-        'price': price,
-        'stock': stock,
-        'image': imageUrl ?? '',
-        'description': description,
-      };
-      final response = await ApiService.post('/api/products', data);
-      String generatedId = 'prod_${DateTime.now().millisecondsSinceEpoch}';
-      if (response != null && response is Map) {
-        if (response['id'] != null) {
-          generatedId = response['id'].toString();
-        } else if (response['_id'] != null) {
-          generatedId = response['_id'].toString();
-        }
-      }
+    final tempId = 'prod_${DateTime.now().millisecondsSinceEpoch}';
 
-      final newProd = ProductModel(
-        id: generatedId,
-        storeId: 'store_1',
-        name: name,
-        price: price,
-        stock: stock,
-        imageUrl: imageUrl ?? '',
-        description: description,
-        category: category,
-      );
-      _products.add(newProd);
-      await _persistProducts();
-      notifyListeners();
-      return true;
-    } catch (e) {
-      debugPrint('Error posting product to API (saving locally): $e');
-    }
-
-    _products.add(ProductModel(
-      id: 'prod_${DateTime.now().millisecondsSinceEpoch}',
+    // 1. Optimistic UI update & global persistence
+    final newProduct = ProductModel(
+      id: tempId,
       storeId: 'store_1',
       name: name,
+      description: description,
       price: price,
       stock: stock,
       imageUrl: imageUrl ?? '',
-      description: description,
       category: category,
-    ));
-    await _persistProducts();
+    );
+    
+    _products.removeWhere((p) => p.name.toLowerCase().trim() == name.toLowerCase().trim());
+    _products.insert(0, newProduct);
+    await _persistLocal();
     notifyListeners();
+
+    // 2. Send to backend API
+    try {
+      final data = {
+        'name': name,
+        'title': name,
+        'category': category,
+        'price': price,
+        'amount': price,
+        'stock': stock,
+        'quantity': stock,
+        'image': imageUrl ?? '',
+        'imageUrl': imageUrl ?? '',
+        'description': description,
+        'store_id': null,
+        'storeId': null,
+      };
+      
+      await ApiService.post('/api/products', data);
+      await fetchProducts();
+    } catch (e) {
+      debugPrint('Error posting product to API: $e');
+    }
     return true;
   }
 }
